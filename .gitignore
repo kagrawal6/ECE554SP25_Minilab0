@@ -1,0 +1,27 @@
+# Quartus generated files
+db/
+incremental_db/
+output_files/
+simulation/
+*.qws
+*.bak
+*.rpt
+*.done
+*.jdi
+*.pin
+*.sld
+*.summary
+
+# System CD (too large, not needed in repo)
+DE1-SoC_v.5.1.1_HWrevF_SystemCD/
+
+# Temporary files
+~$*
+*.tmp
+*.swp
+
+# QuestaSim files
+work/
+transcript
+vsim.wlf
+*.wlf
