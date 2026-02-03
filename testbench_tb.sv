@@ -14,6 +14,13 @@ module testbench_tb;
   wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5;
   wire [9:0] LEDR;
 
+  // Expected 7-segment patterns (accent-low, accent-high for lit segment)
+  parameter [6:0] SEG_0 = 7'b1000000;
+  parameter [6:0] SEG_1 = 7'b1111001;
+  parameter [6:0] SEG_5 = 7'b0010010;
+  parameter [6:0] SEG_8 = 7'b0000000;
+  parameter [6:0] SEG_B = 7'b0000011;  // 11 in hex = B
+
   // Instantiate the DUT (Device Under Test)
   Minilab0 dut (
     .CLOCK_50(clk),
@@ -60,21 +67,72 @@ module testbench_tb;
     // Wait and observe
     #200;
     
-    // Check if we're in DONE state (LEDR[1:0] should be 2)
+    // =========================================
+    // TEST 1: Check if we're in DONE state
+    // =========================================
+    $display("\n=== TEST 1: State Machine ===");
     if (LEDR[1:0] == 2'd2) begin
-      $display("SUCCESS: State machine reached DONE state");
-      $display("LEDR = %b", LEDR);
-      $display("MAC output displayed on 7-segment displays");
+      $display("PASS: State machine reached DONE state (state = %d)", LEDR[1:0]);
     end
     else begin
-      $display("ERROR: State machine did not reach DONE state");
-      $display("Current state (LEDR[1:0]) = %d", LEDR[1:0]);
+      $display("FAIL: State machine did not reach DONE state");
+      $display("      Current state (LEDR[1:0]) = %d", LEDR[1:0]);
     end
     
-    // Display the MAC result
-    // Expected: dot product of [0,5,10,15,20,25,30,35] and [0,10,20,30,40,50,60,70]
-    // = 0 + 50 + 200 + 450 + 800 + 1250 + 1800 + 2450 = 7000 = 0x1B58
-    $display("Expected result: 7000 (0x1B58)");
+    // =========================================
+    // TEST 2: Check if LED1 is ON (DONE indicator)
+    // =========================================
+    $display("\n=== TEST 2: LED1 DONE Indicator ===");
+    if (LEDR[1] == 1'b1) begin
+      $display("PASS: LED1 is ON indicating DONE state");
+    end
+    else begin
+      $display("FAIL: LED1 is not ON");
+    end
+    
+    // =========================================
+    // TEST 3: Verify 7-segment display output
+    // Expected: 001B58 (hex) = 7000 (decimal)
+    // =========================================
+    $display("\n=== TEST 3: 7-Segment Display (Expected: 001B58) ===");
+    $display("HEX5 = %b (expected %b for '0')", HEX5, SEG_0);
+    $display("HEX4 = %b (expected %b for '0')", HEX4, SEG_0);
+    $display("HEX3 = %b (expected %b for '1')", HEX3, SEG_1);
+    $display("HEX2 = %b (expected %b for 'B')", HEX2, SEG_B);
+    $display("HEX1 = %b (expected %b for '5')", HEX1, SEG_5);
+    $display("HEX0 = %b (expected %b for '8')", HEX0, SEG_8);
+    
+    if (HEX5 == SEG_0 && HEX4 == SEG_0 && HEX3 == SEG_1 &&
+        HEX2 == SEG_B && HEX1 == SEG_5 && HEX0 == SEG_8) begin
+      $display("PASS: 7-segment display shows correct value 001B58");
+    end
+    else begin
+      $display("FAIL: 7-segment display does not match expected value");
+    end
+    
+    // =========================================
+    // TEST 4: Verify MAC output value directly
+    // =========================================
+    $display("\n=== TEST 4: MAC Output Value ===");
+    $display("Expected dot product: 7000 (0x1B58)");
+    $display("MAC output (macout) = %d (0x%h)", dut.macout, dut.macout);
+    
+    if (dut.macout == 24'd7000) begin
+      $display("PASS: MAC output is correct (7000)");
+    end
+    else begin
+      $display("FAIL: MAC output is incorrect");
+      $display("      Expected: 7000, Got: %d", dut.macout);
+    end
+    
+    // =========================================
+    // Summary
+    // =========================================
+    $display("\n=== SIMULATION COMPLETE ===");
+    $display("Dot product of arrays:");
+    $display("  Array 1: [0, 5, 10, 15, 20, 25, 30, 35]");
+    $display("  Array 2: [0, 10, 20, 30, 40, 50, 60, 70]");
+    $display("  Result:  7000 (0x1B58)");
     
     #100;
     $finish;
